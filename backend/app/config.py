@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    app_name: str = "OdontoNotes"
+    app_name: str = "DentFlow"
     database_url: str = "sqlite:///./odonto.db"
     # Obrigatória em produção. Em desenvolvimento, sem ela o servidor recusa subir (ver main.py).
     secret_key: str = ""

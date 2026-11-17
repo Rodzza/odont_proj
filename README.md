@@ -1,10 +1,10 @@
-# OdontoNotes
+# DentFlow
 
 Sistema de gestão para consultório odontológico: pacientes, agenda e, nas próximas fases, prontuário com
 odontograma e financeiro. Roda no navegador e vira app Android com o mesmo código.
 
-> Nome provisório. Para trocar, mude `APP_NOME` em `frontend/src/App.tsx`, `<title>` em `frontend/index.html`
-> e `APP_NAME` no backend.
+> Para trocar o nome: `APP_NOME` em `frontend/src/App.tsx`, `<title>` em `frontend/index.html` e `app_name`
+> em `backend/app/config.py`.
 
 ## O que já funciona (fase 1)
 

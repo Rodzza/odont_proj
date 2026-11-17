@@ -4,7 +4,7 @@ import { Agenda } from './screens/Agenda';
 import { Login } from './screens/Login';
 import { Pacientes } from './screens/Pacientes';
 
-export const APP_NOME = 'OdontoNotes';
+export const APP_NOME = 'DentFlow';
 
 type Aba = 'agenda' | 'pacientes';
 
