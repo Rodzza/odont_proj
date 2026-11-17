@@ -118,3 +118,11 @@ def test_prontuario_isolado_entre_consultorios(client, auth):
     outro = entrar(client, "beto@outro.com", "Outro")
     for metodo, url in [("get", f"/pacientes/{pid}/anamnese"), ("get", f"/pacientes/{pid}/evolucoes"), ("get", f"/pacientes/{pid}/odontograma"), ("get", f"/anexos/{aid}/arquivo")]:
         assert getattr(client, metodo)(url, headers=outro).status_code == 404, url
+
+
+def test_horarios_saem_com_fuso_utc(client, auth):
+    """Sem o fuso, o navegador mostrava a anotação 3 horas adiantada."""
+    pid = paciente(client, auth)
+    e = client.post(f"/pacientes/{pid}/evolucoes", headers=auth, json={"texto": "abc"}).json()
+    assert e["criado_em"].endswith(("Z", "+00:00"))
+    assert client.put(f"/pacientes/{pid}/anamnese", headers=auth, json={}).json()["atualizado_em"].endswith(("Z", "+00:00"))

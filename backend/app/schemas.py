@@ -1,9 +1,18 @@
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timezone
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from .models import StatusConsulta
+
+
+def _utc(v: datetime | None) -> datetime | None:
+    """Momentos gravados em UTC. O SQLite devolve sem fuso; marca como UTC para o navegador converter."""
+    return v.replace(tzinfo=timezone.utc) if v and v.tzinfo is None else v
+
+
+Momento = Annotated[datetime, AfterValidator(_utc)]
 
 
 def _so_digitos(v: str | None) -> str | None:
@@ -89,7 +98,7 @@ class PacienteOut(PacienteIn):
     model_config = ConfigDict(from_attributes=True)
     id: int
     arquivado: bool
-    criado_em: datetime
+    criado_em: Momento
 
 
 class PacienteResumo(BaseModel):
@@ -164,7 +173,7 @@ class AnamneseIn(BaseModel):
 
 
 class AnamneseOut(AnamneseIn):
-    atualizado_em: datetime | None = None
+    atualizado_em: Momento | None = None
     alertas: list[str] = Field(default_factory=list)
 
 
@@ -189,7 +198,7 @@ class EvolucaoOut(BaseModel):
     retifica_id: int | None
     retificada_por: int | None = None
     autor: str
-    criado_em: datetime
+    criado_em: Momento
 
 
 PERMANENTES = [q * 10 + n for q in (1, 2, 3, 4) for n in range(1, 9)]
@@ -232,4 +241,4 @@ class AnexoOut(BaseModel):
     descricao: str | None
     tipo: str
     tamanho: int
-    criado_em: datetime
+    criado_em: Momento
