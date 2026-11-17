@@ -1,7 +1,20 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api, type Consulta, type Paciente, type PacienteIn, type PacienteResumo } from '../lib/api';
 import { STATUS, cpf, hora, idade, isoDia, somaDias, telefone } from '../lib/formato';
+import { Anamnese, type AnamneseDados } from './Anamnese';
+import { Anexos } from './Anexos';
 import { ConsultaForm } from './ConsultaForm';
+import { Evolucao } from './Evolucao';
+import { Odontograma } from './Odontograma';
+
+type AbaFicha = 'dados' | 'anamnese' | 'odontograma' | 'evolucao' | 'anexos';
+const ABAS: { id: AbaFicha; rotulo: string }[] = [
+  { id: 'dados', rotulo: 'Dados' },
+  { id: 'anamnese', rotulo: 'Anamnese' },
+  { id: 'odontograma', rotulo: 'Odontograma' },
+  { id: 'evolucao', rotulo: 'Evolução' },
+  { id: 'anexos', rotulo: 'Anexos' },
+];
 
 type Tela = { tipo: 'lista' } | { tipo: 'novo' } | { tipo: 'ficha'; id: number } | { tipo: 'editar'; paciente: Paciente };
 
@@ -102,16 +115,20 @@ function Ficha({ id, onVoltar, onEditar }: { id: number; onVoltar: () => void; o
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [erro, setErro] = useState('');
   const [marcando, setMarcando] = useState(false);
+  const [aba, setAba] = useState<AbaFicha>('dados');
+  const [alertas, setAlertas] = useState<string[]>([]);
 
   const carregar = useCallback(async () => {
     try {
       const hoje = new Date();
-      const [pac, cons] = await Promise.all([
+      const [pac, cons, anam] = await Promise.all([
         api<Paciente>(`/pacientes/${id}`),
         api<Consulta[]>(`/consultas?de=${isoDia(somaDias(hoje, -31))}&ate=${isoDia(somaDias(hoje, 31))}&paciente_id=${id}`),
+        api<AnamneseDados>(`/pacientes/${id}/anamnese`),
       ]);
       setP(pac);
       setConsultas(cons);
+      setAlertas(anam.alertas ?? []);
     } catch (e) {
       setErro((e as Error).message);
     }
@@ -167,6 +184,32 @@ function Ficha({ id, onVoltar, onEditar }: { id: number; onVoltar: () => void; o
         )}
       </header>
 
+      {alertas.length > 0 && (
+        <div className="alertas" role="note" aria-label="Atenção antes de atender">
+          <strong>Atenção</strong>
+          <ul>
+            {alertas.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="abas" role="tablist" aria-label="Prontuário">
+        {ABAS.map((a) => (
+          <button key={a.id} type="button" role="tab" aria-selected={aba === a.id} className="aba" onClick={() => setAba(a.id)}>
+            {a.rotulo}
+          </button>
+        ))}
+      </div>
+
+      {aba === 'anamnese' && <Anamnese pacienteId={p.id} onSalvo={(a) => setAlertas(a.alertas ?? [])} />}
+      {aba === 'odontograma' && <Odontograma pacienteId={p.id} />}
+      {aba === 'evolucao' && <Evolucao pacienteId={p.id} />}
+      {aba === 'anexos' && <Anexos pacienteId={p.id} />}
+
+      {aba === 'dados' && (
+      <>
       <dl className="dados">
         <div>
           <dt>Telefone</dt>
@@ -216,6 +259,8 @@ function Ficha({ id, onVoltar, onEditar }: { id: number; onVoltar: () => void; o
         </button>
       </div>
       <p className="muted pequeno">Pacientes não são apagados: o prontuário tem guarda obrigatória. Arquivar só tira da lista.</p>
+      </>
+      )}
 
       {marcando && (
         <ConsultaForm

@@ -6,19 +6,23 @@ odontograma e financeiro. Roda no navegador e vira app Android com o mesmo códi
 > Para trocar o nome: `APP_NOME` em `frontend/src/App.tsx`, `<title>` em `frontend/index.html` e `app_name`
 > em `backend/app/config.py`.
 
-## O que já funciona (fase 1)
+## O que já funciona
 
 | Área | O que faz |
 |---|---|
 | Login | E-mail e senha (Argon2), sessão de 12 h, bloqueio após 5 tentativas erradas, mesma resposta para e-mail inexistente |
 | Pacientes | Cadastro com validação de CPF e telefone, busca por nome, CPF ou telefone, ficha com histórico de consultas; pacientes são **arquivados, nunca apagados** |
 | Agenda | Semana de segunda a sábado e dia como página de agenda (blocos do tamanho da duração); toque num horário vazio para marcar; **impede dois pacientes no mesmo horário**; situação (agendada, confirmada, atendida, faltou, cancelada); confirmação pelo WhatsApp com mensagem pronta |
-| Auditoria | Registra quem criou, viu ou alterou cada paciente e consulta, com data e IP |
+| Anamnese | Queixa, alergias, medicamentos, condições de saúde e perguntas de sim/não; gera **alertas** que ficam no topo da ficha (alergia, reação à anestesia, hipertensão…) |
+| Odontograma | Numeração FDI, dentição permanente e decídua, 5 faces por dente (cárie, restaurado, a restaurar) e situação do dente (canal, coroa, implante, prótese, ausente, a extrair); salva a cada toque e desfaz se o servidor recusar |
+| Evolução | Linha do tempo das anotações clínicas com autor e dentes; **não se edita nem se apaga**: correções viram retificações ligadas à original |
+| Anexos | Raio-X, fotos e PDF até 10 MB, tipo conferido pelo conteúdo do arquivo; só abrem com login e cada abertura é auditada |
+| Auditoria | Registra quem criou, viu ou alterou cada paciente, consulta, anamnese, dente, anotação e anexo, com data e IP |
 
 ## Roadmap
 
 1. ~~Base: login, pacientes e agenda~~
-2. Prontuário: anamnese, evolução, odontograma interativo, anexos (raio-X) em armazenamento privado
+2. ~~Prontuário: anamnese, evolução, odontograma interativo, anexos (raio-X) em armazenamento privado~~
 3. Financeiro: orçamento a partir do odontograma, pagamentos, parcelas e contas a receber
 4. App Android (Capacitor) e publicação (Render + Supabase + Vercel)
 5. SaaS: cadastro de novos consultórios (o banco já separa tudo por `clinica_id`)
@@ -61,12 +65,13 @@ npm test
 
 ```
 backend/app/
-  models.py      tabelas (Clinica, Usuario, Paciente, Consulta, Auditoria)
-  routers/       auth, pacientes, consultas
+  models.py      tabelas (Clinica, Usuario, Paciente, Consulta, Anamnese, Evolucao, Dente, Anexo, Auditoria)
+  routers/       auth, pacientes, consultas, prontuario
+  armazenamento.py  anexos em pasta privada (troca por bucket privado no deploy)
   security.py    senhas, tokens, limite de tentativas
   cli.py         cria o consultório e o dentista
 frontend/src/
-  screens/       Login, Agenda, ConsultaForm, Pacientes
+  screens/       Login, Agenda, ConsultaForm, Pacientes, Anamnese, Odontograma, Evolucao, Anexos
   lib/           cliente da API e formatação (com testes)
 ci/              SonarQube
 ```

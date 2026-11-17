@@ -14,3 +14,6 @@ dist/
 coverage/
 # Android (gerado pelo Capacitor)
 frontend/android/
+# Anexos de pacientes (nunca no repositório)
+anexos/
+backend/anexos/

@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # Endereço(s) do frontend, separados por vírgula, para o CORS.
     frontend_url: str = "http://localhost:5173"
     ambiente: str = "dev"  # dev | prod
+    # Pasta dos anexos (raio-X, fotos). Fora da pasta pública; só a API lê.
+    pasta_anexos: str = "./anexos"
+    anexo_max_mb: int = 10
 
     @property
     def origens(self) -> list[str]:
