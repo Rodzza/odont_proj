@@ -187,3 +187,92 @@ h1, h2 { margin: 0; letter-spacing: -0.01em; }
   .hist > span:nth-child(2) { grid-column: 1; grid-row: 2; color: var(--cinza); }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* ---------- Fase 2: prontuário ---------- */
+.ok { color: var(--ok); font-weight: 600; }
+.oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.campo.curto { max-width: 220px; }
+.alertas { display: flex; gap: 14px; align-items: flex-start; margin: 0 0 16px; padding: 12px 16px; border-radius: var(--raio); background: var(--gengiva-claro); border-left: 5px solid var(--gengiva); }
+.alertas strong { color: #a3324c; }
+.alertas ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px; font-weight: 600; }
+.abas { display: flex; gap: 4px; margin: 0 0 18px; border-bottom: 1.5px solid var(--linha); overflow-x: auto; scrollbar-width: none; }
+.aba { flex: none; padding: 10px 14px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1.5px; background: none; font-weight: 600; color: var(--cinza); cursor: pointer; }
+.aba[aria-selected='true'] { color: var(--jaleco); border-bottom-color: var(--jaleco); }
+
+/* Anamnese */
+.anamnese { max-width: 680px; }
+.doencas { border: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px; }
+.doencas legend { font-weight: 600; font-size: 0.92rem; margin-bottom: 8px; padding: 0; }
+.simnao { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.simnao > span { flex: 1 1 240px; font-weight: 500; }
+.simnao .chip[aria-checked='true'] { background: var(--jaleco); border-color: var(--jaleco); color: var(--branco); }
+
+/* Odontograma */
+.odonto-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.ferramentas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+.ferr-grupo { width: 100%; font-size: 0.82rem; color: var(--cinza); font-weight: 600; margin-top: 4px; }
+.ferr { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--linha); background: var(--branco); cursor: pointer; font-weight: 500; font-size: 0.92rem; }
+.ferr[aria-checked='true'] { border-color: var(--grafite); box-shadow: inset 0 0 0 1.5px var(--grafite); font-weight: 700; }
+.ferr i { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid #9aa8a6; background: var(--branco); }
+.ferr--carie i { background: var(--gengiva); border-color: var(--gengiva); }
+.ferr--restaurado i { background: #2b6cb0; border-color: #2b6cb0; }
+.ferr--restaurar i { background: repeating-linear-gradient(45deg, #2b6cb0 0 2px, #fff 2px 4px); border-color: #2b6cb0; }
+.ferr--extrair i { border: 0; background: linear-gradient(45deg, transparent 43%, var(--gengiva) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--gengiva) 43% 57%, transparent 57%); }
+.ferr--ausente i { border: 0; background: linear-gradient(45deg, transparent 43%, #6d7c7a 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, #6d7c7a 43% 57%, transparent 57%); }
+.ferr--canal i { border: 0; background: linear-gradient(90deg, transparent 40%, #7b4bb7 40% 60%, transparent 60%); }
+.ferr--coroa i { border-radius: 99px; border: 2px solid #b7791f; }
+.ferr--implante i { border-color: var(--jaleco); background: repeating-linear-gradient(0deg, var(--jaleco) 0 2px, #fff 2px 4px); }
+.ferr--protese i { border: 0; background: linear-gradient(0deg, transparent 40%, #b7791f 40% 60%, transparent 60%); }
+.odonto-rolagem { overflow-x: auto; background: var(--branco); border-radius: var(--raio); box-shadow: inset 0 0 0 1.5px var(--linha); padding: 12px 8px; }
+.odonto-svg { display: block; width: 100%; height: auto; }
+.linha-media { stroke: var(--linha); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.dente-num { font-size: 13px; font-weight: 700; fill: var(--cinza); font-variant-numeric: tabular-nums; }
+.dente--sel .dente-num { fill: var(--jaleco); }
+.face { fill: var(--branco); stroke: #8fa09d; stroke-width: 1.2; cursor: pointer; }
+.face:hover { fill: var(--jaleco-claro); }
+.face:focus-visible { outline: none; stroke: var(--jaleco); stroke-width: 3; }
+.face--carie, .face--carie:hover { fill: var(--gengiva); }
+.face--restaurado, .face--restaurado:hover { fill: #2b6cb0; }
+.face--restaurar, .face--restaurar:hover { fill: #cfe0f3; stroke: #2b6cb0; stroke-width: 2; }
+.dente--sel .face { stroke: var(--jaleco); stroke-width: 1.8; }
+.dente--ausente .face, .dente--implante .face { fill: #f1f4f3; cursor: default; }
+.dmarca { fill: none; stroke-width: 3; stroke-linecap: round; pointer-events: none; }
+.dmarca--ausente { stroke: #6d7c7a; }
+.dmarca--extrair { stroke: var(--gengiva); }
+.dmarca--canal { stroke: #7b4bb7; stroke-width: 4; }
+.dmarca--coroa { stroke: #b7791f; }
+.dmarca--implante { stroke: var(--jaleco); stroke-width: 2.5; }
+.dmarca--protese { stroke: #b7791f; stroke-width: 4; }
+.dente-detalhe { display: grid; gap: 4px; margin-top: 14px; padding: 14px 16px; background: var(--branco); border-radius: var(--raio); box-shadow: inset 0 0 0 1.5px var(--linha); }
+.dente-detalhe .campo { margin: 8px 0 0; }
+.odonto-lista { list-style: none; margin: 0; padding: 0; }
+.odonto-lista li { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--linha); }
+.odonto-lista .link { padding: 0; font-weight: 700; text-decoration: none; }
+
+/* Evolução */
+.evo-form { max-width: 680px; margin-bottom: 20px; }
+.linha-tempo { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--linha); }
+.linha-tempo li { position: relative; padding: 0 0 18px 14px; }
+.linha-tempo li::before { content: ''; position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 99px; background: var(--jaleco); box-shadow: 0 0 0 3px var(--porcelana); }
+.linha-tempo li.correcao::before { background: #b7791f; }
+.linha-tempo li.retificada .lt-texto { color: var(--cinza); text-decoration: line-through; text-decoration-color: rgba(0, 0, 0, 0.35); }
+.lt-cabeca { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; font-size: 0.9rem; }
+.lt-cabeca time { font-weight: 700; }
+.lt-dentes { font-size: 0.82rem; font-weight: 600; color: var(--jaleco); background: var(--jaleco-claro); padding: 2px 8px; border-radius: 99px; }
+.lt-texto { margin: 6px 0 4px; white-space: pre-line; line-height: 1.5; }
+.lt-etiqueta { margin: 4px 0; font-size: 0.82rem; font-weight: 600; color: #8a5a12; }
+
+/* Anexos */
+.anexo-envio { max-width: 520px; margin-bottom: 16px; }
+.anexo-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.anexo-lista button { width: 100%; display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 12px; border: 0; border-radius: var(--raio); background: var(--branco); box-shadow: inset 0 0 0 1.5px var(--linha); cursor: pointer; text-align: left; }
+.anexo-tipo { grid-row: span 2; width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; background: var(--jaleco-claro); color: var(--jaleco); font-weight: 700; font-size: 0.75rem; }
+.anexo-nome { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.painel--largo { width: min(900px, 100%); }
+.anexo-ver { width: 100%; max-height: 75vh; object-fit: contain; border: 0; border-radius: var(--raio-sm); background: #111; }
+iframe.anexo-ver { height: 75vh; background: var(--branco); }
+@media (max-width: 760px) {
+  .odonto-lista li { grid-template-columns: 40px 1fr; }
+  .odonto-lista li > .muted { grid-column: 2; }
+  .alertas { flex-direction: column; gap: 6px; }
+}

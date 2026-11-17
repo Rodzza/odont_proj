@@ -91,3 +91,63 @@ class Auditoria(Base):
     entidade_id: Mapped[int | None] = mapped_column(Integer)
     ip: Mapped[str | None] = mapped_column(String(45))
     em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, index=True)
+
+
+# ---------- Fase 2: prontuário ----------
+
+
+class Anamnese(Base):
+    """Uma por paciente; cada alteração fica na auditoria."""
+
+    __tablename__ = "anamnese"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), unique=True)
+    respostas: Mapped[str] = mapped_column(Text, default="{}")  # JSON validado em schemas.AnamneseIn
+    atualizado_por: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"))
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, onupdate=agora)
+
+
+class Evolucao(Base):
+    """Anotação clínica. Imutável: não se edita nem se apaga; corrige-se com uma retificação."""
+
+    __tablename__ = "evolucao"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
+    texto: Mapped[str] = mapped_column(Text)
+    dentes: Mapped[str | None] = mapped_column(String(120))  # ex.: "16,17"
+    retifica_id: Mapped[int | None] = mapped_column(ForeignKey("evolucao.id"))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, index=True)
+
+
+class Dente(Base):
+    """Situação atual de um dente no odontograma (numeração FDI) e de cada face."""
+
+    __tablename__ = "dente"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    numero: Mapped[int] = mapped_column(Integer)
+    situacao: Mapped[str] = mapped_column(String(20), default="higido")
+    faces: Mapped[str] = mapped_column(String(200), default="{}")  # JSON {"O": "carie", ...}
+    observacao: Mapped[str | None] = mapped_column(String(500))
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, onupdate=agora)
+
+    __table_args__ = (Index("ix_dente_paciente_numero", "paciente_id", "numero", unique=True),)
+
+
+class Anexo(Base):
+    __tablename__ = "anexo"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
+    nome: Mapped[str] = mapped_column(String(200))
+    descricao: Mapped[str | None] = mapped_column(String(300))
+    tipo: Mapped[str] = mapped_column(String(60))
+    tamanho: Mapped[int] = mapped_column(Integer)
+    chave: Mapped[str] = mapped_column(String(120), unique=True)  # nome no armazenamento (aleatório)
+    arquivado: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, index=True)

@@ -7,6 +7,7 @@ import pytest
 # Banco temporário e chave de teste ANTES de importar o app.
 _tmp = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/teste.db"
+os.environ["PASTA_ANEXOS"] = f"{_tmp}/anexos"
 os.environ["SECRET_KEY"] = "chave-de-teste-com-mais-de-32-caracteres!!"
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
