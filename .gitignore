@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.db
+# Segredos
+.env
+.env.*
+!.env.example
+# Node
+node_modules/
+dist/
+coverage/
+# Android (gerado pelo Capacitor)
+frontend/android/
