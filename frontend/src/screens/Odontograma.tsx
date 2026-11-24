@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import {
   ARCADAS,
+  anatomia,
   FERRAMENTAS_DENTE,
   FERRAMENTAS_FACE,
   NOME_FACE,
@@ -27,8 +28,44 @@ const POLIGONOS: Record<Exclude<Posicao, 'centro'>, string> = {
   direita: `${T},0 ${T},${T} ${T - I},${T - I} ${T - I},${I}`,
 };
 
-function DenteSvg({ d, selecionado, onToque }: { d: DenteEstado; selecionado: boolean; onToque: (p: Posicao) => void }) {
+const A = 58; // altura do desenho anatômico (raiz + coroa)
+
+/** Dente desenhado com coroa e raízes. Superior com raiz para cima; inferior espelhado. */
+function AnatomiaSvg({ d, y }: { d: DenteEstado; y: number }) {
   const sup = ehSuperior(d.numero);
+  const { largura, raizes, raizLonga } = anatomia(d.numero);
+  const cx = T / 2;
+  const l = cx - largura / 2;
+  const r = cx + largura / 2;
+  const colo = 30; // linha entre raiz e coroa
+  const coroa = `M${l} ${colo} L${r} ${colo} Q${r + 2} ${colo + 15} ${r - 3} ${A - 4} Q${cx} ${A + 1} ${l + 3} ${A - 4} Q${l - 2} ${colo + 15} ${l} ${colo} Z`;
+  const ponta = raizLonga ? 0 : 5;
+  const faixa = (largura - 6) / raizes;
+  const raizesPath = Array.from({ length: raizes }, (_, k) => {
+    const a = l + 3 + k * faixa;
+    const b = a + faixa;
+    const tip = (a + b) / 2 + (raizes > 1 ? (k - (raizes - 1) / 2) * 2 : 0);
+    return `M${a} ${colo} Q${a + 1} ${colo - 16} ${tip} ${ponta} Q${b - 1} ${colo - 16} ${b} ${colo} Z`;
+  }).join(' ');
+  const s = d.situacao;
+  const temRaiz = s !== 'implante';
+  return (
+    <g className={`anat anat--${s}`} transform={sup ? `translate(0, ${y})` : `translate(0, ${y + A}) scale(1, -1)`} aria-hidden="true">
+      {temRaiz ? (
+        <path className="anat-raiz" d={raizesPath} />
+      ) : (
+        <path className="anat-implante" d={`M${cx - 5} ${colo}V6l5-4 5 4V${colo}Z M${cx - 7} 10H${cx + 7}M${cx - 7} 16H${cx + 7}M${cx - 7} 22H${cx + 7}`} />
+      )}
+      <path className="anat-coroa" d={coroa} />
+      {s === 'canal' && <path className="anat-canal" d={`M${cx} ${colo + 4}V${ponta + 4}`} />}
+      {s === 'extrair' && <path className="dmarca dmarca--extrair" d={`M${l} 4L${r} ${A - 4}M${r} 4L${l} ${A - 4}`} />}
+    </g>
+  );
+}
+
+function DenteSvg({ d, selecionado, anatomico, onToque }: { d: DenteEstado; selecionado: boolean; anatomico: boolean; onToque: (p: Posicao) => void }) {
+  const sup = ehSuperior(d.numero);
+  const yNum = anatomico ? (sup ? -A - 14 : T + A + 24) : sup ? -8 : T + 18;
   const semFaces = d.situacao === 'ausente' || d.situacao === 'implante';
   const face = (p: Posicao) => d.faces[faceNaPosicao(d.numero, p)];
   const rotuloFace = (p: Posicao) => {
@@ -39,7 +76,8 @@ function DenteSvg({ d, selecionado, onToque }: { d: DenteEstado; selecionado: bo
 
   return (
     <g className={`dente dente--${d.situacao}${selecionado ? ' dente--sel' : ''}`}>
-      <text className="dente-num" x={T / 2} y={sup ? -8 : T + 18} textAnchor="middle">
+      {anatomico && <AnatomiaSvg d={d} y={sup ? -A - 6 : T + 6} />}
+      <text className="dente-num" x={T / 2} y={yNum} textAnchor="middle">
         {d.numero}
       </text>
       {(Object.keys(POLIGONOS) as Exclude<Posicao, 'centro'>[]).map((p) => (
@@ -84,6 +122,21 @@ export function Odontograma({ pacienteId }: { pacienteId: number }) {
   const [selecionado, setSelecionado] = useState<number | null>(null);
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(0);
+  const [anatomico, setAnatomico] = useState(() => {
+    try {
+      return localStorage.getItem('odonto.visao') === 'anatomico';
+    } catch {
+      return false;
+    }
+  });
+  const mudarVisao = (a: boolean) => {
+    setAnatomico(a);
+    try {
+      localStorage.setItem('odonto.visao', a ? 'anatomico' : 'geometrico');
+    } catch {
+      /* preferência só nesta sessão */
+    }
+  };
 
   useEffect(() => {
     api<DenteEstado[]>(`/pacientes/${pacienteId}/odontograma`)
@@ -130,7 +183,7 @@ export function Odontograma({ pacienteId }: { pacienteId: number }) {
   const linha = (numeros: readonly number[], x0: number, y: number) =>
     numeros.map((n, i) => (
       <g key={n} transform={`translate(${x0 + i * (T + 6)}, ${y})`}>
-        <DenteSvg d={estado(n)} selecionado={selecionado === n} onToque={(p) => tocar(n, p)} />
+        <DenteSvg d={estado(n)} selecionado={selecionado === n} anatomico={anatomico} onToque={(p) => tocar(n, p)} />
       </g>
     ));
 
@@ -146,6 +199,14 @@ export function Odontograma({ pacienteId }: { pacienteId: number }) {
           </button>
           <button type="button" className="chip" aria-pressed={tipo === 'deciduo'} onClick={() => setTipo('deciduo')}>
             Decídua (de leite)
+          </button>
+        </div>
+        <div className="chips" role="group" aria-label="Visualização">
+          <button type="button" className="chip" aria-pressed={!anatomico} onClick={() => mudarVisao(false)}>
+            Geométrico
+          </button>
+          <button type="button" className="chip" aria-pressed={anatomico} onClick={() => mudarVisao(true)}>
+            Anatômico
           </button>
         </div>
         <span className="muted pequeno" aria-live="polite">
@@ -177,8 +238,13 @@ export function Odontograma({ pacienteId }: { pacienteId: number }) {
       )}
 
       <div className="odonto-rolagem">
-        <svg className="odonto-svg" viewBox={`-6 -30 ${largura + 12} ${2 * T + 104}`} style={{ minWidth: largura * 0.92 }} aria-label={`Odontograma ${tipo === 'permanente' ? 'permanente' : 'decíduo'}`}>
-          <line className="linha-media" x1={larguraLado + 6} y1={-26} x2={larguraLado + 6} y2={2 * T + 70} />
+        <svg
+          className="odonto-svg"
+          viewBox={anatomico ? `-6 ${-A - 34} ${largura + 12} ${2 * T + 104 + 2 * A + 8}` : `-6 -30 ${largura + 12} ${2 * T + 104}`}
+          style={{ minWidth: largura * 0.92 }}
+          aria-label={`Odontograma ${tipo === 'permanente' ? 'permanente' : 'decíduo'}, visão ${anatomico ? 'anatômica' : 'geométrica'}`}
+        >
+          <line className="linha-media" x1={larguraLado + 6} y1={anatomico ? -A - 30 : -26} x2={larguraLado + 6} y2={anatomico ? 2 * T + 70 + A + 8 : 2 * T + 70} />
           <line className="linha-media" x1={-4} y1={T + 22} x2={largura + 6} y2={T + 22} />
           {linha(arcada.superior[0], 0, 0)}
           {linha(arcada.superior[1], larguraLado + 18, 0)}

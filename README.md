@@ -1,7 +1,7 @@
 # DentFlow
 
-Sistema de gestão para consultório odontológico: pacientes, agenda e, nas próximas fases, prontuário com
-odontograma e financeiro. Roda no navegador e vira app Android com o mesmo código.
+Sistema de gestão para consultório odontológico: pacientes, agenda, prontuário com odontograma, orçamentos,
+tratamentos e financeiro. Roda no navegador e vira app Android com o mesmo código.
 
 > Para trocar o nome: `APP_NOME` em `frontend/src/App.tsx`, `<title>` em `frontend/index.html` e `app_name`
 > em `backend/app/config.py`.
@@ -14,7 +14,10 @@ odontograma e financeiro. Roda no navegador e vira app Android com o mesmo códi
 | Pacientes | Cadastro com validação de CPF e telefone, busca por nome, CPF ou telefone, ficha com histórico de consultas; pacientes são **arquivados, nunca apagados** |
 | Agenda | Semana de segunda a sábado e dia como página de agenda (blocos do tamanho da duração); toque num horário vazio para marcar; **impede dois pacientes no mesmo horário**; situação (agendada, confirmada, atendida, faltou, cancelada); confirmação pelo WhatsApp com mensagem pronta |
 | Anamnese | Queixa, alergias, medicamentos, condições de saúde e perguntas de sim/não; gera **alertas** que ficam no topo da ficha (alergia, reação à anestesia, hipertensão…) |
-| Odontograma | Numeração FDI, dentição permanente e decídua, 5 faces por dente (cárie, restaurado, a restaurar) e situação do dente (canal, coroa, implante, prótese, ausente, a extrair); salva a cada toque e desfaz se o servidor recusar |
+| Odontograma | Visão geométrica ou anatômica (coroa e raízes), numeração FDI, dentição permanente e decídua, 5 faces por dente (cárie, restaurado, a restaurar) e situação do dente (canal, coroa, implante, prótese, ausente, a extrair); salva a cada toque e desfaz se o servidor recusar |
+| Orçamentos | Gerados a partir do odontograma (cárie/a restaurar e a extrair) com os preços da tabela, ou à mão; desconto; aprovação à vista ou em até 24 parcelas; **aprovado não muda**; "orçamento restante" com o que não foi feito |
+| Tratamentos | Itens dos orçamentos aprovados e tratamentos avulsos, com dente e faces; **Finalizar** registra na evolução; ver finalizados |
+| Financeiro | Recebido no mês por forma de pagamento, a receber, atrasado; contas a receber com lembrete pelo WhatsApp; pagamento **não se apaga**, estorna com motivo; tabela de preços |
 | Evolução | Linha do tempo das anotações clínicas com autor e dentes; **não se edita nem se apaga**: correções viram retificações ligadas à original |
 | Anexos | Raio-X, fotos e PDF até 10 MB, tipo conferido pelo conteúdo do arquivo; só abrem com login e cada abertura é auditada |
 | Auditoria | Registra quem criou, viu ou alterou cada paciente, consulta, anamnese, dente, anotação e anexo, com data e IP |
@@ -23,7 +26,7 @@ odontograma e financeiro. Roda no navegador e vira app Android com o mesmo códi
 
 1. ~~Base: login, pacientes e agenda~~
 2. ~~Prontuário: anamnese, evolução, odontograma interativo, anexos (raio-X) em armazenamento privado~~
-3. Financeiro: orçamento a partir do odontograma, pagamentos, parcelas e contas a receber
+3. ~~Financeiro: orçamento a partir do odontograma, tratamentos, parcelas e contas a receber~~
 4. App Android (Capacitor) e publicação (Render + Supabase + Vercel)
 5. SaaS: cadastro de novos consultórios (o banco já separa tudo por `clinica_id`)
 
@@ -66,12 +69,12 @@ npm test
 ```
 backend/app/
   models.py      tabelas (Clinica, Usuario, Paciente, Consulta, Anamnese, Evolucao, Dente, Anexo, Auditoria)
-  routers/       auth, pacientes, consultas, prontuario
+  routers/       auth, pacientes, consultas, prontuario, financeiro
   armazenamento.py  anexos em pasta privada (troca por bucket privado no deploy)
   security.py    senhas, tokens, limite de tentativas
   cli.py         cria o consultório e o dentista
 frontend/src/
-  screens/       Login, Agenda, ConsultaForm, Pacientes, Anamnese, Odontograma, Evolucao, Anexos
+  screens/       Login, Agenda, ConsultaForm, Pacientes, Anamnese, Odontograma, Orcamentos, Tratamentos, Evolucao, Anexos, Financeiro
   lib/           cliente da API e formatação (com testes)
 ci/              SonarQube
 ```

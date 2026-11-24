@@ -87,3 +87,19 @@ export function resumo(d: DenteEstado): string {
   for (const [face, e] of Object.entries(d.faces)) partes.push(`${face} ${FERRAMENTAS_FACE.find((x) => x.id === e)!.rotulo.toLowerCase()}`);
   return partes.join(', ');
 }
+
+/** Forma do dente para o odontograma anatômico: largura da coroa e quantas raízes. */
+export function anatomia(n: number): { largura: number; raizes: number; raizLonga: boolean } {
+  const pos = n % 10; // 1 incisivo central … 8 terceiro molar
+  const deciduo = n > 50;
+  const superior = ehSuperior(n);
+  if (deciduo) {
+    if (pos <= 2) return { largura: 22, raizes: 1, raizLonga: false };
+    if (pos === 3) return { largura: 24, raizes: 1, raizLonga: true };
+    return { largura: 32, raizes: superior ? 3 : 2, raizLonga: false };
+  }
+  if (pos <= 2) return { largura: pos === 1 ? 26 : 23, raizes: 1, raizLonga: false };
+  if (pos === 3) return { largura: 26, raizes: 1, raizLonga: true };
+  if (pos <= 5) return { largura: 28, raizes: superior && pos === 4 ? 2 : 1, raizLonga: false };
+  return { largura: 36, raizes: superior ? 3 : 2, raizLonga: false };
+}

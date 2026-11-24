@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aplicar, faceNaPosicao, resumo, vazio } from './odontograma';
+import { anatomia, aplicar, faceNaPosicao, resumo, vazio } from './odontograma';
 
 describe('odontograma', () => {
   it('mesial aponta para a linha média em cada quadrante', () => {
@@ -33,5 +33,17 @@ describe('odontograma', () => {
   });
   it('resumo legível', () => {
     expect(resumo({ ...vazio(16), situacao: 'canal', faces: { O: 'carie' } })).toBe('canal, O cárie');
+  });
+});
+
+describe('anatomia', () => {
+  it('dá raízes conforme o tipo de dente', () => {
+    expect(anatomia(11)).toMatchObject({ raizes: 1 });
+    expect(anatomia(13)).toMatchObject({ raizLonga: true });
+    expect(anatomia(14).raizes).toBe(2); // 1º pré-molar superior
+    expect(anatomia(44).raizes).toBe(1);
+    expect(anatomia(16).raizes).toBe(3);
+    expect(anatomia(36).raizes).toBe(2);
+    expect(anatomia(55).raizes).toBe(3);
   });
 });

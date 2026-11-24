@@ -151,3 +151,74 @@ class Anexo(Base):
     chave: Mapped[str] = mapped_column(String(120), unique=True)  # nome no armazenamento (aleatório)
     arquivado: Mapped[bool] = mapped_column(Boolean, default=False)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, index=True)
+
+
+# ---------- Fase 3: financeiro ----------
+# Valores sempre em centavos (inteiros): nada de float com dinheiro.
+
+
+class Procedimento(Base):
+    """Tabela de preços do consultório."""
+
+    __tablename__ = "procedimento"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    nome: Mapped[str] = mapped_column(String(120))
+    valor: Mapped[int] = mapped_column(Integer, default=0)
+    # Liga o procedimento a uma marcação do odontograma para sugerir orçamento ("restauracao", "extracao").
+    sugere: Mapped[str | None] = mapped_column(String(20))
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class Orcamento(Base):
+    """Plano de tratamento com preço. Depois de aprovado, os itens não mudam (vira contrato)."""
+
+    __tablename__ = "orcamento"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
+    status: Mapped[str] = mapped_column(String(12), default="aberto")  # aberto, aprovado, recusado, cancelado
+    origem_id: Mapped[int | None] = mapped_column(ForeignKey("orcamento.id"))  # "orçamento restante" de outro
+    desconto: Mapped[int] = mapped_column(Integer, default=0)
+    observacoes: Mapped[str | None] = mapped_column(Text)
+    aprovado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, index=True)
+
+    itens: Mapped[list["ItemOrcamento"]] = relationship(cascade="all, delete-orphan", order_by="ItemOrcamento.id", foreign_keys="ItemOrcamento.orcamento_id")
+    parcelas: Mapped[list["Parcela"]] = relationship(order_by="Parcela.numero")
+
+
+class ItemOrcamento(Base):
+    """Item de orçamento. Depois de aprovado é um tratamento a fazer; pode existir sem orçamento (tratamento avulso)."""
+
+    __tablename__ = "item_orcamento"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    orcamento_id: Mapped[int | None] = mapped_column(ForeignKey("orcamento.id"), index=True)
+    descricao: Mapped[str] = mapped_column(String(160))
+    dente: Mapped[int | None] = mapped_column(Integer)
+    faces: Mapped[str | None] = mapped_column(String(5))  # ex.: "MV"
+    valor: Mapped[int] = mapped_column(Integer, default=0)
+    quantidade: Mapped[int] = mapped_column(Integer, default=1)
+    dentista_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"))
+    feito: Mapped[bool] = mapped_column(Boolean, default=False)
+    feito_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
+
+
+class Parcela(Base):
+    """Conta a receber. Pagamento não se apaga: errou, estorna (fica na auditoria)."""
+
+    __tablename__ = "parcela"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    orcamento_id: Mapped[int] = mapped_column(ForeignKey("orcamento.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    numero: Mapped[int] = mapped_column(Integer)
+    vencimento: Mapped[date] = mapped_column(Date, index=True)
+    valor: Mapped[int] = mapped_column(Integer)
+    pago_em: Mapped[date | None] = mapped_column(Date, index=True)
+    forma: Mapped[str | None] = mapped_column(String(20))
+    cancelada: Mapped[bool] = mapped_column(Boolean, default=False)
