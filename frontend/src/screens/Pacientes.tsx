@@ -4,15 +4,17 @@ import { STATUS, cpf, hora, idade, isoDia, somaDias, telefone } from '../lib/for
 import { Anamnese, type AnamneseDados } from './Anamnese';
 import { Anexos } from './Anexos';
 import { ConsultaForm } from './ConsultaForm';
-import { Evolucao } from './Evolucao';
 import { Odontograma } from './Odontograma';
+import { Orcamentos } from './Orcamentos';
+import { Tratamentos } from './Tratamentos';
 
-type AbaFicha = 'dados' | 'anamnese' | 'odontograma' | 'evolucao' | 'anexos';
+type AbaFicha = 'dados' | 'anamnese' | 'odontograma' | 'orcamentos' | 'tratamentos' | 'anexos';
 const ABAS: { id: AbaFicha; rotulo: string }[] = [
   { id: 'dados', rotulo: 'Dados' },
   { id: 'anamnese', rotulo: 'Anamnese' },
   { id: 'odontograma', rotulo: 'Odontograma' },
-  { id: 'evolucao', rotulo: 'Evolução' },
+  { id: 'orcamentos', rotulo: 'Orçamentos' },
+  { id: 'tratamentos', rotulo: 'Tratamentos' },
   { id: 'anexos', rotulo: 'Anexos' },
 ];
 
@@ -205,7 +207,8 @@ function Ficha({ id, onVoltar, onEditar }: { id: number; onVoltar: () => void; o
 
       {aba === 'anamnese' && <Anamnese pacienteId={p.id} onSalvo={(a) => setAlertas(a.alertas ?? [])} />}
       {aba === 'odontograma' && <Odontograma pacienteId={p.id} />}
-      {aba === 'evolucao' && <Evolucao pacienteId={p.id} />}
+      {aba === 'orcamentos' && <Orcamentos pacienteId={p.id} />}
+      {aba === 'tratamentos' && <Tratamentos pacienteId={p.id} />}
       {aba === 'anexos' && <Anexos pacienteId={p.id} />}
 
       {aba === 'dados' && (

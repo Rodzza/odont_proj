@@ -105,3 +105,72 @@ export interface ConsultaIn {
   status: Status;
   observacoes: string | null;
 }
+
+// Financeiro (centavos)
+export interface Procedimento {
+  id: number;
+  nome: string;
+  valor: number;
+  ativo: boolean;
+  sugere: string | null;
+}
+export interface ItemOrcamento {
+  id?: number;
+  descricao: string;
+  dente: number | null;
+  faces: string | null;
+  valor: number;
+  quantidade: number;
+  feito?: boolean;
+}
+export interface Parcela {
+  id: number;
+  orcamento_id: number;
+  paciente_id: number;
+  numero: number;
+  vencimento: string;
+  valor: number;
+  pago_em: string | null;
+  forma: string | null;
+  cancelada: boolean;
+}
+export type StatusOrcamento = 'aberto' | 'aprovado' | 'recusado' | 'cancelado';
+export interface Orcamento {
+  id: number;
+  origem_id: number | null;
+  paciente_id: number;
+  status: StatusOrcamento;
+  itens: ItemOrcamento[];
+  subtotal: number;
+  desconto: number;
+  total: number;
+  pago: number;
+  observacoes: string | null;
+  autor: string;
+  criado_em: string;
+  aprovado_em: string | null;
+  parcelas: Parcela[];
+}
+export interface ContaReceber extends Parcela {
+  paciente_nome: string;
+  paciente_telefone: string | null;
+  total_parcelas: number;
+}
+export interface ResumoFinanceiro {
+  recebido_periodo: number;
+  a_receber: number;
+  atrasado: number;
+  por_forma: Record<string, number>;
+  contas: ContaReceber[];
+}
+export interface Tratamento {
+  id: number;
+  orcamento_id: number | null;
+  descricao: string;
+  dente: number | null;
+  faces: string | null;
+  dentista: string;
+  feito: boolean;
+  feito_em: string | null;
+  criado_em: string;
+}

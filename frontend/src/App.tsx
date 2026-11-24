@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { lerSessao, quandoSessaoExpirar, salvarSessao, type Sessao } from './lib/api';
 import { Agenda } from './screens/Agenda';
+import { Financeiro } from './screens/Financeiro';
 import { Login } from './screens/Login';
 import { Pacientes } from './screens/Pacientes';
 
 export const APP_NOME = 'DentFlow';
 
-type Aba = 'agenda' | 'pacientes';
+type Aba = 'agenda' | 'pacientes' | 'financeiro';
 
 export function App() {
   const [sessao, setSessao] = useState<Sessao | null>(lerSessao);
@@ -53,6 +54,10 @@ export function App() {
           <IconePacientes />
           <span>Pacientes</span>
         </button>
+        <button type="button" className="rail-item" aria-current={aba === 'financeiro' ? 'page' : undefined} onClick={() => setAba('financeiro')}>
+          <IconeFinanceiro />
+          <span>Financeiro</span>
+        </button>
         <div className="rail-rodape">
           <span className="rail-quem">
             {sessao.nome}
@@ -63,7 +68,11 @@ export function App() {
           </button>
         </div>
       </nav>
-      <main className="conteudo">{aba === 'agenda' ? <Agenda clinica={sessao.clinica} /> : <Pacientes />}</main>
+      <main className="conteudo">
+        {aba === 'agenda' && <Agenda clinica={sessao.clinica} />}
+        {aba === 'pacientes' && <Pacientes />}
+        {aba === 'financeiro' && <Financeiro clinica={sessao.clinica} />}
+      </main>
     </div>
   );
 }
@@ -81,6 +90,15 @@ function IconePacientes() {
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
       <circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path d="M4.5 20c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconeFinanceiro() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M6.5 9.5v5M17.5 9.5v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

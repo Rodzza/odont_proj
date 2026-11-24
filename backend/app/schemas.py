@@ -242,3 +242,165 @@ class AnexoOut(BaseModel):
     tipo: str
     tamanho: int
     criado_em: Momento
+
+
+# ---------- Fase 3: financeiro (valores em centavos) ----------
+
+FORMAS_PAGAMENTO = ("pix", "dinheiro", "debito", "credito", "boleto", "transferencia")
+
+
+class ProcedimentoIn(BaseModel):
+    nome: str = Field(min_length=2, max_length=120)
+    valor: int = Field(ge=0, le=100_000_00)
+    ativo: bool = True
+
+    @field_validator("nome")
+    @classmethod
+    def _nome(cls, v: str) -> str:
+        return " ".join(v.split())
+
+
+class ProcedimentoOut(ProcedimentoIn):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    sugere: str | None
+
+
+class ItemIn(BaseModel):
+    descricao: str = Field(min_length=2, max_length=160)
+    dente: int | None = None
+    faces: str | None = None
+    valor: int = Field(ge=0, le=100_000_00)
+    quantidade: int = Field(default=1, ge=1, le=99)
+
+    @field_validator("faces")
+    @classmethod
+    def _faces(cls, v: str | None) -> str | None:
+        if not v:
+            return None
+        v = v.upper().replace(" ", "")
+        if any(f not in FACES for f in v) or len(set(v)) != len(v):
+            raise ValueError("Faces inválidas. Use V, L, M, D, O.")
+        return "".join(f for f in FACES if f in v)
+
+    @field_validator("dente")
+    @classmethod
+    def _dente(cls, v: int | None) -> int | None:
+        if v is not None and v not in DENTES_VALIDOS:
+            raise ValueError(f"Dente {v} não existe na numeração FDI.")
+        return v
+
+
+class ItemOut(ItemIn):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    feito: bool
+    feito_em: Momento | None = None
+
+
+class TratamentoIn(BaseModel):
+    descricao: str = Field(min_length=2, max_length=160)
+    dente: int | None = None
+    faces: str | None = None
+
+    _dente = field_validator("dente")(ItemIn._dente.__func__)
+    _faces = field_validator("faces")(ItemIn._faces.__func__)
+
+
+class TratamentoOut(BaseModel):
+    id: int
+    orcamento_id: int | None
+    descricao: str
+    dente: int | None
+    faces: str | None
+    dentista: str
+    feito: bool
+    feito_em: Momento | None
+    criado_em: Momento
+
+
+class OrcamentoIn(BaseModel):
+    itens: list[ItemIn] = Field(min_length=1, max_length=60)
+    desconto: int = Field(default=0, ge=0)
+    observacoes: str | None = Field(default=None, max_length=2000)
+
+
+class Aprovacao(BaseModel):
+    parcelas: int = Field(ge=1, le=24)
+    primeiro_vencimento: date
+    entrada_paga: bool = False
+    forma_entrada: str | None = None
+
+    @field_validator("forma_entrada")
+    @classmethod
+    def _forma(cls, v: str | None) -> str | None:
+        if v is not None and v not in FORMAS_PAGAMENTO:
+            raise ValueError("Forma de pagamento inválida.")
+        return v
+
+
+class ParcelaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    orcamento_id: int
+    paciente_id: int
+    numero: int
+    vencimento: date
+    valor: int
+    pago_em: date | None
+    forma: str | None
+    cancelada: bool
+
+
+class OrcamentoOut(BaseModel):
+    id: int
+    origem_id: int | None = None
+    paciente_id: int
+    status: str
+    itens: list[ItemOut]
+    subtotal: int
+    desconto: int
+    total: int
+    pago: int
+    observacoes: str | None
+    autor: str
+    criado_em: Momento
+    aprovado_em: Momento | None
+    parcelas: list[ParcelaOut]
+
+
+class Pagamento(BaseModel):
+    forma: str
+    pago_em: date
+
+    @field_validator("forma")
+    @classmethod
+    def _forma(cls, v: str) -> str:
+        if v not in FORMAS_PAGAMENTO:
+            raise ValueError("Forma de pagamento inválida.")
+        return v
+
+    @field_validator("pago_em")
+    @classmethod
+    def _data(cls, v: date) -> date:
+        if v > date.today():
+            raise ValueError("A data do pagamento não pode estar no futuro.")
+        return v
+
+
+class Estorno(BaseModel):
+    motivo: str = Field(min_length=3, max_length=300)
+
+
+class ContaReceber(ParcelaOut):
+    paciente_nome: str
+    paciente_telefone: str | None
+    total_parcelas: int
+
+
+class ResumoFinanceiro(BaseModel):
+    recebido_periodo: int
+    a_receber: int
+    atrasado: int
+    por_forma: dict[str, int]
+    contas: list[ContaReceber]
