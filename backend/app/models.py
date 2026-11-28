@@ -222,3 +222,23 @@ class Parcela(Base):
     pago_em: Mapped[date | None] = mapped_column(Date, index=True)
     forma: Mapped[str | None] = mapped_column(String(20))
     cancelada: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+# ---------- Fase 4: IA ----------
+
+
+class AnaliseIA(Base):
+    """Resultado guardado de uma função de IA (triagem, leitura de anexo, resumo).
+    É apoio à decisão: o dentista confere; nada aqui altera o prontuário sozinho."""
+
+    __tablename__ = "analise_ia"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    clinica_id: Mapped[int] = mapped_column(ForeignKey("clinica.id"), index=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), index=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
+    tipo: Mapped[str] = mapped_column(String(20))  # triagem | anexo | resumo
+    anexo_id: Mapped[int | None] = mapped_column(ForeignKey("anexo.id"), index=True)
+    entrada: Mapped[str | None] = mapped_column(Text)
+    resultado: Mapped[str] = mapped_column(Text)  # JSON
+    modelo: Mapped[str] = mapped_column(String(60))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, index=True)

@@ -22,6 +22,31 @@ tratamentos e financeiro. Roda no navegador e vira app Android com o mesmo códi
 | Anexos | Raio-X, fotos e PDF até 10 MB, tipo conferido pelo conteúdo do arquivo; só abrem com login e cada abertura é auditada |
 | Auditoria | Registra quem criou, viu ou alterou cada paciente, consulta, anamnese, dente, anotação e anexo, com data e IP |
 
+## IA (Claude)
+
+Inspirado no workshop Arcane 4 (PetCare), adaptado ao consultório. Usa **Agno** + **Claude**; sem `ANTHROPIC_API_KEY`
+no `.env` do backend, tudo isso fica desligado e o resto do sistema funciona normal.
+
+| Função | Onde | O que faz |
+|---|---|---|
+| Triagem de urgência | Ficha → Assistente IA | Queixa do paciente → verde / amarelo / laranja / vermelho, com prazo, motivo e o que dizer ao paciente; considera os alertas da anamnese (modelo rápido: Haiku) |
+| Leitura de anexos | Ficha → Anexos → abrir → **Ler com IA** | Lê raio-X, fotos e PDFs direto (sem OCR separado): tipo, resumo, achados por dente (FDI), texto extraído e o que conferir |
+| Resumo do prontuário | Ficha → Assistente IA | Resumo para ler em 30 s: alertas, pendências e histórico, com as fontes |
+| Perguntar ao prontuário | Ficha → Assistente IA | Chat que responde só com o prontuário e mostra as fontes (anamnese, evolução, odontograma, consultas, leituras de anexo) |
+| Busca entre pacientes | Menu → Assistente → Busca | Pergunta sobre todos os pacientes ("quem teve reação à articaína?"): pgvector acha os trechos parecidos e o Claude responde citando os pacientes |
+| Secretária | Menu → Assistente | Conversa, busca paciente, vê horários livres e **marca na agenda do DentFlow** (mesma regra de horário duplo); pede confirmação antes |
+
+Decisões:
+- **Tudo fica no banco do DentFlow** (Postgres/Supabase): o Claude só recebe uma cópia na hora da pergunta.
+- **Chat de um paciente sem vetores**: o prontuário inteiro cabe no contexto do Claude; cada registro vira uma fonte com id
+  (`evolucao:12`) que a IA cita.
+- **Busca entre pacientes com pgvector**: anamnese, evoluções e leituras de anexo viram vetores (Voyage AI, `VOYAGE_API_KEY`)
+  na tabela `trecho_vetor`, no mesmo Postgres, com índice HNSW. Indexa ao salvar; se a Voyage falhar, o prontuário salva
+  mesmo assim. "Reindexar tudo" refaz o índice. No SQLite (dev) o vetor fica em JSON e a distância é calculada em Python.
+- **LGPD**: CPF, telefone, e-mail e endereço nunca vão para a IA (paciente aparece só pelo primeiro nome e idade); toda
+  chamada fica na auditoria (`ia:triagem`, `ia:chat`…); triagens, leituras e resumos ficam guardados em `analise_ia`.
+- **A IA sugere, o dentista decide**: nada altera o prontuário sozinho. A secretária só marca consulta; não cancela nem remarca.
+
 ## Roadmap
 
 1. ~~Base: login, pacientes e agenda~~

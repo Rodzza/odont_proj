@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ApiError, api, lerSessao } from '../lib/api';
+import { ApiError, api, lerSessao, type AnaliseIA, type LeituraAnexo } from '../lib/api';
 
 interface Anexo {
   id: number;
@@ -26,12 +26,35 @@ export function Anexos({ pacienteId }: { pacienteId: number }) {
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [vendo, setVendo] = useState<{ anexo: Anexo; url: string } | null>(null);
+  const [leituras, setLeituras] = useState<Record<number, LeituraAnexo>>({});
+  const [lendo, setLendo] = useState(false);
   const arquivoRef = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(() => {
     api<Anexo[]>(`/pacientes/${pacienteId}/anexos`).then(setLista).catch((e: Error) => setErro(e.message));
   }, [pacienteId]);
   useEffect(carregar, [carregar]);
+  useEffect(() => {
+    api<AnaliseIA<LeituraAnexo>[]>(`/ia/pacientes/${pacienteId}/analises?tipo=anexo`)
+      .then((ls) => {
+        const porAnexo: Record<number, LeituraAnexo> = {};
+        for (const l of [...ls].reverse()) if (l.anexo_id) porAnexo[l.anexo_id] = l.resultado; // a mais recente vence
+        setLeituras(porAnexo);
+      })
+      .catch(() => {});
+  }, [pacienteId]);
+
+  const lerComIA = async (a: Anexo) => {
+    setErro('');
+    setLendo(true);
+    try {
+      const r = await api<AnaliseIA<LeituraAnexo>>(`/ia/anexos/${a.id}/ler`, { method: 'POST' });
+      setLeituras((l) => ({ ...l, [a.id]: r.resultado }));
+    } catch (e) {
+      setErro((e as Error).message);
+    }
+    setLendo(false);
+  };
   useEffect(() => () => (vendo ? URL.revokeObjectURL(vendo.url) : undefined), [vendo]);
 
   const enviar = async (arquivo: File | undefined) => {
@@ -94,7 +117,10 @@ export function Anexos({ pacienteId }: { pacienteId: number }) {
               <span className="anexo-tipo" aria-hidden="true">
                 {a.tipo === 'application/pdf' ? 'PDF' : 'IMG'}
               </span>
-              <span className="anexo-nome">{a.descricao || a.nome}</span>
+              <span className="anexo-nome">
+                {a.descricao || a.nome}
+                {leituras[a.id] && <small className="selo-ia">IA</small>}
+              </span>
               <span className="muted pequeno">
                 {new Date(a.criado_em).toLocaleDateString('pt-BR')}, {tamanho(a.tamanho)}
               </span>
@@ -117,12 +143,48 @@ export function Anexos({ pacienteId }: { pacienteId: number }) {
             ) : (
               <img className="anexo-ver" src={vendo.url} alt={vendo.anexo.descricao || vendo.anexo.nome} />
             )}
+            {erro && (
+              <p className="erro" role="alert">
+                {erro}
+              </p>
+            )}
+            {leituras[vendo.anexo.id] ? (
+              <LeituraIA l={leituras[vendo.anexo.id]} />
+            ) : (
+              <button type="button" className="botao secundario" disabled={lendo} onClick={() => void lerComIA(vendo.anexo)}>
+                {lendo ? 'Lendo o anexo…' : 'Ler com IA'}
+              </button>
+            )}
             <button type="button" className="link" onClick={() => void arquivar(vendo.anexo)}>
               Arquivar anexo
             </button>
           </section>
         </div>
       )}
+    </div>
+  );
+}
+
+function LeituraIA({ l }: { l: LeituraAnexo }) {
+  return (
+    <div className="ia-cartao ia-leitura">
+      <h3>Leitura da IA · {l.tipo_documento}</h3>
+      <p>{l.resumo}</p>
+      {l.achados.length > 0 && (
+        <ul className="ia-lista">
+          {l.achados.map((x, i) => (
+            <li key={i}>{x}</li>
+          ))}
+        </ul>
+      )}
+      {l.pontos_para_conferir.length > 0 && <p className="pequeno"><b>Conferir no original:</b> {l.pontos_para_conferir.join('; ')}</p>}
+      {l.texto_extraido && (
+        <details>
+          <summary>Texto extraído</summary>
+          <p className="obs">{l.texto_extraido}</p>
+        </details>
+      )}
+      <p className="muted pequeno">Qualidade da imagem: {l.qualidade}. Sugestão da IA: a avaliação é do dentista.</p>
     </div>
   );
 }

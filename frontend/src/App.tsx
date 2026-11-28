@@ -4,10 +4,11 @@ import { Agenda } from './screens/Agenda';
 import { Financeiro } from './screens/Financeiro';
 import { Login } from './screens/Login';
 import { Pacientes } from './screens/Pacientes';
+import { Assistente } from './screens/Secretaria';
 
 export const APP_NOME = 'DentFlow';
 
-type Aba = 'agenda' | 'pacientes' | 'financeiro';
+type Aba = 'agenda' | 'pacientes' | 'financeiro' | 'secretaria';
 
 export function App() {
   const [sessao, setSessao] = useState<Sessao | null>(lerSessao);
@@ -58,6 +59,10 @@ export function App() {
           <IconeFinanceiro />
           <span>Financeiro</span>
         </button>
+        <button type="button" className="rail-item" aria-current={aba === 'secretaria' ? 'page' : undefined} onClick={() => setAba('secretaria')}>
+          <IconeSecretaria />
+          <span>Assistente</span>
+        </button>
         <div className="rail-rodape">
           <span className="rail-quem">
             {sessao.nome}
@@ -72,6 +77,7 @@ export function App() {
         {aba === 'agenda' && <Agenda clinica={sessao.clinica} />}
         {aba === 'pacientes' && <Pacientes />}
         {aba === 'financeiro' && <Financeiro clinica={sessao.clinica} />}
+        {aba === 'secretaria' && <Assistente />}
       </main>
     </div>
   );
@@ -99,6 +105,14 @@ function IconeFinanceiro() {
       <rect x="3" y="6" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path d="M6.5 9.5v5M17.5 9.5v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconeSecretaria() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path d="M4 5.5h16v10H9l-5 4v-14Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M12 8l.9 1.9 1.9.9-1.9.9L12 13.6l-.9-1.9-1.9-.9 1.9-.9L12 8Z" fill="currentColor" />
     </svg>
   );
 }

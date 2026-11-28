@@ -3,12 +3,13 @@ import { api, type Consulta, type Paciente, type PacienteIn, type PacienteResumo
 import { STATUS, cpf, hora, idade, isoDia, somaDias, telefone } from '../lib/formato';
 import { Anamnese, type AnamneseDados } from './Anamnese';
 import { Anexos } from './Anexos';
+import { AssistenteIA } from './AssistenteIA';
 import { ConsultaForm } from './ConsultaForm';
 import { Odontograma } from './Odontograma';
 import { Orcamentos } from './Orcamentos';
 import { Tratamentos } from './Tratamentos';
 
-type AbaFicha = 'dados' | 'anamnese' | 'odontograma' | 'orcamentos' | 'tratamentos' | 'anexos';
+type AbaFicha = 'dados' | 'anamnese' | 'odontograma' | 'orcamentos' | 'tratamentos' | 'anexos' | 'ia';
 const ABAS: { id: AbaFicha; rotulo: string }[] = [
   { id: 'dados', rotulo: 'Dados' },
   { id: 'anamnese', rotulo: 'Anamnese' },
@@ -16,6 +17,7 @@ const ABAS: { id: AbaFicha; rotulo: string }[] = [
   { id: 'orcamentos', rotulo: 'Orçamentos' },
   { id: 'tratamentos', rotulo: 'Tratamentos' },
   { id: 'anexos', rotulo: 'Anexos' },
+  { id: 'ia', rotulo: 'Assistente IA' },
 ];
 
 type Tela = { tipo: 'lista' } | { tipo: 'novo' } | { tipo: 'ficha'; id: number } | { tipo: 'editar'; paciente: Paciente };
@@ -210,6 +212,7 @@ function Ficha({ id, onVoltar, onEditar }: { id: number; onVoltar: () => void; o
       {aba === 'orcamentos' && <Orcamentos pacienteId={p.id} />}
       {aba === 'tratamentos' && <Tratamentos pacienteId={p.id} />}
       {aba === 'anexos' && <Anexos pacienteId={p.id} />}
+      {aba === 'ia' && <AssistenteIA pacienteId={p.id} />}
 
       {aba === 'dados' && (
       <>
