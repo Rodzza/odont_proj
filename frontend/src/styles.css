@@ -374,3 +374,34 @@ iframe.anexo-ver { height: 75vh; background: var(--branco); }
 .anat--implante .anat-implante { fill: var(--jaleco-claro); stroke: var(--jaleco); }
 .anat-canal { stroke: #7b4bb7; stroke-width: 3.5; stroke-linecap: round; fill: none; }
 .dente--sel .anat-coroa { stroke: var(--jaleco); stroke-width: 2; }
+
+/* ---------- IA (Claude) ---------- */
+.ia { display: grid; gap: 16px; }
+.ia-cartao { display: grid; gap: 10px; padding: 18px; border-radius: var(--raio); background: var(--branco); box-shadow: inset 0 0 0 1.5px var(--linha); }
+.ia-cartao h3 { margin: 0; font-size: 1.1rem; }
+.ia-cartao p { margin: 0; line-height: 1.5; }
+.ia-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ia-sub { margin: 6px 0 0; font-size: 0.95rem; }
+.ia-lista { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.ia-alertas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ia-alertas li { padding: 4px 10px; border-radius: 999px; background: var(--gengiva-claro); color: #a3324c; font-weight: 600; font-size: 0.88rem; }
+.ia-fontes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
+.chip--fonte { min-height: 30px; padding: 0 10px; font-size: 0.82rem; }
+.ia-fonte-texto { flex-basis: 100%; white-space: pre-line; font-size: 0.9rem; }
+.ia-leitura { margin: 12px 0; }
+.selo-ia { margin-left: 8px; padding: 1px 6px; border-radius: 6px; background: var(--jaleco-claro); color: var(--jaleco); font-weight: 700; font-size: 0.72rem; }
+.triagem { display: grid; gap: 6px; padding: 14px 16px; border-radius: var(--raio-sm); border-left: 6px solid; }
+.triagem-cor { font-size: 1.05rem; }
+.triagem--verde { background: var(--ok-claro); border-color: var(--ok); }
+.triagem--amarelo { background: #fdf6dc; border-color: #d9a90b; }
+.triagem--laranja { background: #fdecdf; border-color: #e07b2c; }
+.triagem--vermelho { background: var(--gengiva-claro); border-color: #c2334f; }
+.triagem-item { display: grid; gap: 4px; }
+.chat { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; padding: 4px; }
+.chat--alto { max-height: none; min-height: 50dvh; background: var(--branco); border-radius: var(--raio); box-shadow: inset 0 0 0 1.5px var(--linha); padding: 14px; margin-bottom: 12px; }
+.bolha { max-width: 85%; padding: 10px 14px; border-radius: 14px; display: grid; gap: 6px; }
+.bolha p { margin: 0; white-space: pre-line; line-height: 1.45; }
+.bolha--user { align-self: flex-end; background: var(--jaleco); color: var(--branco); border-bottom-right-radius: 4px; }
+.bolha--assistant { align-self: flex-start; background: var(--porcelana); border-bottom-left-radius: 4px; }
+.chat-envio { display: flex; gap: 8px; }
+.chat-envio .busca { flex: 1; }

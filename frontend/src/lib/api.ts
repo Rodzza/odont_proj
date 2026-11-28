@@ -174,3 +174,53 @@ export interface Tratamento {
   feito_em: string | null;
   criado_em: string;
 }
+
+// IA (Claude)
+export type CorTriagem = 'verde' | 'amarelo' | 'laranja' | 'vermelho';
+export interface Triagem {
+  cor: CorTriagem;
+  prazo: string;
+  motivo: string;
+  sinais_de_alerta: string[];
+  orientacao_paciente: string;
+}
+export interface LeituraAnexo {
+  tipo_documento: string;
+  resumo: string;
+  achados: string[];
+  texto_extraido: string;
+  pontos_para_conferir: string[];
+  qualidade: 'boa' | 'regular' | 'ruim';
+}
+export interface AnaliseIA<T = unknown> {
+  id: number;
+  tipo: 'triagem' | 'anexo' | 'resumo';
+  anexo_id: number | null;
+  entrada: string | null;
+  resultado: T;
+  modelo: string;
+  criado_em: string;
+}
+export interface FonteIA {
+  id: string;
+  titulo: string;
+  texto: string;
+}
+export interface ResumoIA {
+  resumo: string;
+  alertas: string[];
+  pendencias: string[];
+  historico: string[];
+  fontes: string[];
+  fontes_detalhe: FonteIA[];
+}
+export interface RespostaChatIA {
+  resposta: string;
+  fontes: string[];
+  sem_informacao: boolean;
+  fontes_detalhe: FonteIA[];
+}
+export interface MensagemIA {
+  papel: 'user' | 'assistant';
+  texto: string;
+}

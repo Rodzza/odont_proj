@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db import Base, engine
-from .routers import auth, consultas, financeiro, pacientes, prontuario
+from .routers import auth, consultas, financeiro, ia, pacientes, prontuario
 
 
 def criar_app() -> FastAPI:
@@ -33,7 +33,7 @@ def criar_app() -> FastAPI:
     def health():
         return {"ok": True}
 
-    for r in (auth.router, pacientes.router, consultas.router, prontuario.router, financeiro.router):
+    for r in (auth.router, pacientes.router, consultas.router, prontuario.router, financeiro.router, ia.router):
         app.include_router(r)
 
     Base.metadata.create_all(engine)
