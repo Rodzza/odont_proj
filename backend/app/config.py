@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     ia_modelo: str = "claude-sonnet-5-5"        # resumo, chat, leitura de anexos, secretária
     ia_modelo_rapido: str = "claude-haiku-5-5"  # triagem
+    # Busca entre pacientes (embeddings da Voyage AI + pgvector). Sem a chave, fica desligada.
+    voyage_api_key: str = ""
+    voyage_modelo: str = "voyage-3.5"
 
     @property
     def origens(self) -> list[str]:

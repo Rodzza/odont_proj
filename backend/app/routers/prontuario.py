@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from .. import armazenamento
 from ..config import settings
+from ..ia import vetores
 from ..db import get_db
 from ..deps import auditar, usuario_atual
 from ..models import Anamnese, Anexo, Dente, Evolucao, Usuario
@@ -61,6 +62,8 @@ def salvar_anamnese(paciente_id: int, dados: AnamneseIn, request: Request, u: Us
         db.add(a)
     a.respostas = dados.model_dump_json()
     a.atualizado_por = u.id
+    db.flush()
+    vetores.indexar_anamnese(db, a)
     auditar(db, u, "editar", "anamnese", paciente_id, request)
     db.commit()
     db.refresh(a)
@@ -101,6 +104,7 @@ def criar_evolucao(paciente_id: int, dados: EvolucaoIn, request: Request, u: Usu
     )
     db.add(e)
     db.flush()
+    vetores.indexar_evolucao(db, e)
     auditar(db, u, "criar", "evolucao", e.id, request)
     db.commit()
     return _evolucao_out(e, {u.id: u.nome}, {})

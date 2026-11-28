@@ -4,7 +4,7 @@ import { Agenda } from './screens/Agenda';
 import { Financeiro } from './screens/Financeiro';
 import { Login } from './screens/Login';
 import { Pacientes } from './screens/Pacientes';
-import { Secretaria } from './screens/Secretaria';
+import { Assistente } from './screens/Secretaria';
 
 export const APP_NOME = 'DentFlow';
 
@@ -61,7 +61,7 @@ export function App() {
         </button>
         <button type="button" className="rail-item" aria-current={aba === 'secretaria' ? 'page' : undefined} onClick={() => setAba('secretaria')}>
           <IconeSecretaria />
-          <span>Secretária</span>
+          <span>Assistente</span>
         </button>
         <div className="rail-rodape">
           <span className="rail-quem">
@@ -77,7 +77,7 @@ export function App() {
         {aba === 'agenda' && <Agenda clinica={sessao.clinica} />}
         {aba === 'pacientes' && <Pacientes />}
         {aba === 'financeiro' && <Financeiro clinica={sessao.clinica} />}
-        {aba === 'secretaria' && <Secretaria />}
+        {aba === 'secretaria' && <Assistente />}
       </main>
     </div>
   );

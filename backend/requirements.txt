@@ -9,3 +9,5 @@ PyJWT==2.10.1
 python-multipart==0.0.20
 agno==3.2.1
 anthropic==2.14.0
+pgvector==0.5.1
+httpx==0.28.1

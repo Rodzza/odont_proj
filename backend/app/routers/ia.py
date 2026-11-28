@@ -11,9 +11,9 @@ from sqlalchemy.orm import Session
 from .. import armazenamento
 from ..db import get_db
 from ..deps import auditar, usuario_atual
-from ..ia import agentes, motor, secretaria
+from ..ia import agentes, motor, secretaria, vetores
 from ..ia.contexto import como_texto, fontes_do_paciente, identificacao
-from ..models import AnaliseIA, Anexo, Usuario
+from ..models import AnaliseIA, Anexo, Paciente, Usuario
 from ..config import settings
 from .pacientes import _do_consultorio
 
@@ -86,7 +86,7 @@ def _guardar(db: Session, u: Usuario, paciente_id: int, tipo: str, resultado: Ba
 @router.get("/status")
 def ia_status(u: Usuario = Depends(usuario_atual)):
     cfg = settings()
-    return {"ativa": bool(cfg.anthropic_api_key), "modelo": cfg.ia_modelo, "modelo_rapido": cfg.ia_modelo_rapido}
+    return {"ativa": bool(cfg.anthropic_api_key), "busca": vetores.ativa(), "modelo": cfg.ia_modelo, "modelo_rapido": cfg.ia_modelo_rapido}
 
 
 @router.post("/pacientes/{paciente_id}/triagem", response_model=AnaliseOut, status_code=status.HTTP_201_CREATED)
@@ -113,6 +113,7 @@ def ler_anexo(anexo_id: int, request: Request, u: Usuario = Depends(usuario_atua
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Arquivo não encontrado no armazenamento.")
     r = agentes.ler_anexo(dados, an.tipo, an.descricao)
     a = _guardar(db, u, an.paciente_id, "anexo", r, anexo_id=an.id)
+    vetores.indexar_leitura(db, a)
     auditar(db, u, "ia:ler", "anexo", an.id, request)
     db.commit()
     return _analise_out(a)
@@ -159,3 +160,62 @@ def falar_secretaria(dados: SecretariaIn, request: Request, u: Usuario = Depends
     auditar(db, u, "ia:secretaria", "agenda", None, request)
     db.commit()
     return SecretariaOut(resposta=texto, consultas_marcadas=marcadas)
+
+
+# ---------- Busca entre pacientes ----------
+
+
+class BuscaIn(BaseModel):
+    pergunta: str = Field(min_length=3, max_length=500)
+
+
+class TrechoOut(BaseModel):
+    id: str
+    paciente_id: int
+    paciente_nome: str
+    origem: str
+    texto: str
+    similaridade: float
+
+
+class PacienteCitadoOut(agentes.PacienteCitado):
+    nome: str
+
+
+class BuscaOut(BaseModel):
+    resposta: str
+    sem_informacao: bool
+    pacientes: list[PacienteCitadoOut]
+    trechos: list[TrechoOut]
+
+
+@router.post("/busca", response_model=BuscaOut)
+def buscar(dados: BuscaIn, request: Request, u: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)):
+    motor.modelo()  # 503 cedo se o Claude estiver desligado
+    achados = vetores.buscar(db, u.clinica_id, dados.pergunta.strip())
+    nomes = {p.id: p.nome for p in db.scalars(select(Paciente).where(Paciente.id.in_({t.paciente_id for t, _ in achados})))}
+    trechos = [
+        TrechoOut(id=f"t{i}", paciente_id=t.paciente_id, paciente_nome=nomes.get(t.paciente_id, "?"), origem=t.origem, texto=t.texto, similaridade=round(s, 3))
+        for i, (t, s) in enumerate(achados, 1)
+    ]
+    auditar(db, u, "ia:busca", "clinica", u.clinica_id, request)
+    db.commit()
+    if not trechos:
+        return BuscaOut(resposta="Nada indexado ainda. Salve anamneses e evoluções (ou use Reindexar).", sem_informacao=True, pacientes=[], trechos=[])
+    # Para a IA: só primeiro nome + id do paciente, nunca CPF/telefone.
+    contexto = "\n\n".join(
+        f'<trecho id="{t.id}" paciente_id="{t.paciente_id}" paciente="{t.paciente_nome.split()[0]}" origem="{t.origem}">\n{t.texto}\n</trecho>'
+        for t in trechos
+    )
+    r = agentes.busca(dados.pergunta.strip(), contexto)
+    validos = {t.paciente_id for t in trechos}
+    citados = [PacienteCitadoOut(**p.model_dump(), nome=nomes[p.paciente_id]) for p in r.pacientes if p.paciente_id in validos]
+    return BuscaOut(resposta=r.resposta, sem_informacao=r.sem_informacao, pacientes=citados, trechos=trechos)
+
+
+@router.post("/reindexar")
+def reindexar(request: Request, u: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)):
+    n = vetores.reindexar_clinica(db, u.clinica_id)
+    auditar(db, u, "ia:reindexar", "clinica", u.clinica_id, request)
+    db.commit()
+    return {"indexados": n}

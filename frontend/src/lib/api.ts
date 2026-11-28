@@ -224,3 +224,9 @@ export interface MensagemIA {
   papel: 'user' | 'assistant';
   texto: string;
 }
+export interface BuscaIA {
+  resposta: string;
+  sem_informacao: boolean;
+  pacientes: { paciente_id: number; nome: string; motivo: string; fontes: string[] }[];
+  trechos: { id: string; paciente_id: number; paciente_nome: string; origem: string; texto: string; similaridade: number }[];
+}

@@ -2,7 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
+from sqlalchemy import text
+
 from .db import Base, engine
+from .ia import vetores  # noqa: F401  (registra a tabela trecho_vetor)
 from .routers import auth, consultas, financeiro, ia, pacientes, prontuario
 
 
@@ -36,7 +39,13 @@ def criar_app() -> FastAPI:
     for r in (auth.router, pacientes.router, consultas.router, prontuario.router, financeiro.router, ia.router):
         app.include_router(r)
 
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as c:
+            c.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(engine)
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as c:
+            c.execute(text("CREATE INDEX IF NOT EXISTS ix_trecho_hnsw ON trecho_vetor USING hnsw (embedding vector_cosine_ops)"))
     return app
 
 

@@ -117,3 +117,30 @@ def chat(prontuario: str, historico: list[tuple[str, str]], pergunta: str) -> Re
     conversa = "\n".join(f"{'Dentista' if quem == 'user' else 'Assistente'}: {txt}" for quem, txt in historico[-10:])
     msg = f"{prontuario}\n\n" + (f"Conversa até aqui:\n{conversa}\n\n" if conversa else "") + f"Pergunta: {pergunta}"
     return motor.rodar(instrucoes=[AVISO, INSTRUCOES_CHAT], mensagem=msg, esquema=RespostaChat)
+
+
+# ---------- Busca entre pacientes (pgvector) ----------
+
+
+class PacienteCitado(BaseModel):
+    paciente_id: int
+    motivo: str = Field(description="Por que este paciente responde à pergunta, em uma frase")
+    fontes: list[str] = Field(default_factory=list, description="ids dos trechos usados, ex.: 't3'")
+
+
+class RespostaBusca(BaseModel):
+    resposta: str = Field(description="Resposta direta, citando os pacientes pelo primeiro nome")
+    pacientes: list[PacienteCitado] = Field(default_factory=list)
+    sem_informacao: bool = False
+
+
+INSTRUCOES_BUSCA = """
+Você recebe trechos de prontuários de VÁRIOS pacientes, encontrados por busca de significado — alguns podem não ter
+relação com a pergunta. Use só os trechos que realmente respondem. Liste em `pacientes` apenas quem tem evidência
+nos trechos, com os ids dos trechos usados. Se nenhum trecho responde, diga isso e marque sem_informacao = true.
+Lembre que a busca pode não ter achado todos os casos: não afirme que "só estes" pacientes têm algo.
+"""
+
+
+def busca(pergunta: str, trechos: str) -> RespostaBusca:
+    return motor.rodar(instrucoes=[AVISO, INSTRUCOES_BUSCA], mensagem=f"{trechos}\n\nPergunta: {pergunta}", esquema=RespostaBusca)

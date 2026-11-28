@@ -1,21 +1,47 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api, type MensagemIA } from '../lib/api';
+import { BuscaPacientes } from './BuscaPacientes';
 
-/** Secretária com IA: marca consultas na agenda do DentFlow conversando. */
-export function Secretaria() {
+/** Menu "Assistente": secretária (agenda) e busca entre pacientes. */
+export function Assistente() {
+  const [aba, setAba] = useState<'secretaria' | 'busca'>('secretaria');
+  const [status, setStatus] = useState<{ ativa: boolean; busca: boolean } | null>(null);
+  useEffect(() => {
+    api<{ ativa: boolean; busca: boolean }>('/ia/status')
+      .then(setStatus)
+      .catch(() => setStatus({ ativa: false, busca: false }));
+  }, []);
+  return (
+    <div>
+      <div className="topo">
+        <div>
+          <h1 className="dia-titulo">Assistente</h1>
+          <p className="resumo">{aba === 'secretaria' ? 'Peça para ver a agenda ou marcar consultas. Ela confirma com você antes de marcar.' : 'Pergunte sobre todos os pacientes de uma vez.'}</p>
+        </div>
+      </div>
+      <div className="abas" role="tablist" aria-label="Assistente">
+        <button type="button" role="tab" className="aba" aria-selected={aba === 'secretaria'} onClick={() => setAba('secretaria')}>
+          Secretária
+        </button>
+        <button type="button" role="tab" className="aba" aria-selected={aba === 'busca'} onClick={() => setAba('busca')}>
+          Busca entre pacientes
+        </button>
+      </div>
+      {status === null && <p className="muted">Carregando…</p>}
+      {status && aba === 'secretaria' && <Secretaria ativa={status.ativa} />}
+      {status && aba === 'busca' && <BuscaPacientes ativa={status.ativa && status.busca} />}
+    </div>
+  );
+}
+
+function Secretaria({ ativa }: { ativa: boolean }) {
   const [msgs, setMsgs] = useState<MensagemIA[]>([]);
   const [texto, setTexto] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
   const [marcadas, setMarcadas] = useState(0);
-  const [ativa, setAtiva] = useState<boolean | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    api<{ ativa: boolean }>('/ia/status')
-      .then((s) => setAtiva(s.ativa))
-      .catch(() => setAtiva(false));
-  }, []);
   useEffect(() => fimRef.current?.scrollIntoView?.({ block: 'end' }), [msgs, carregando]);
 
   const enviar = async (e: FormEvent) => {
@@ -39,14 +65,8 @@ export function Secretaria() {
 
   return (
     <div className="secretaria">
-      <div className="topo">
-        <div>
-          <h1 className="dia-titulo">Secretária</h1>
-          <p className="resumo">Peça para ver a agenda ou marcar consultas. Ela confirma com você antes de marcar.</p>
-        </div>
-        {marcadas > 0 && <span className="aviso pequeno">{marcadas === 1 ? '1 consulta marcada' : `${marcadas} consultas marcadas`} — veja na Agenda</span>}
-      </div>
-      {ativa === false && (
+      {marcadas > 0 && <p className="aviso pequeno">{marcadas === 1 ? '1 consulta marcada' : `${marcadas} consultas marcadas`} — veja na Agenda</p>}
+      {!ativa && (
         <p className="aviso">
           A IA está desligada. Coloque a <code>ANTHROPIC_API_KEY</code> no <code>.env</code> do servidor.
         </p>
@@ -69,8 +89,8 @@ export function Secretaria() {
         </p>
       )}
       <form className="chat-envio" onSubmit={(e) => void enviar(e)}>
-        <input className="busca" value={texto} maxLength={2000} onChange={(e) => setTexto(e.target.value)} placeholder="Escreva para a secretária" aria-label="Mensagem" disabled={ativa === false} />
-        <button type="submit" className="botao" disabled={carregando || !texto.trim() || ativa === false}>
+        <input className="busca" value={texto} maxLength={2000} onChange={(e) => setTexto(e.target.value)} placeholder="Escreva para a secretária" aria-label="Mensagem" disabled={!ativa} />
+        <button type="submit" className="botao" disabled={carregando || !texto.trim() || !ativa}>
           Enviar
         </button>
       </form>
